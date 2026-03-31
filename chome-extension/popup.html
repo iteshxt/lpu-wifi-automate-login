@@ -1,192 +1,385 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LPU WiFi Login</title>
+  <meta charset="UTF-8">
+  <title>LPU WiFi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    html, body {
-      width: 320px;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      color: #e8eaed;
-      background-color: #292a2d;
-      overflow: hidden;
+    :root {
+      --background: #09090b;
+      --foreground: #fafafa;
+      --card: #09090b;
+      --card-foreground: #fafafa;
+      --popover: #09090b;
+      --popover-foreground: #fafafa;
+      --primary: #fafafa;
+      --primary-foreground: #18181b;
+      --secondary: #27272a;
+      --secondary-foreground: #fafafa;
+      --muted: #27272a;
+      --muted-foreground: #a1a1aa;
+      --accent: #27272a;
+      --accent-foreground: #fafafa;
+      --destructive: #7f1d1d;
+      --destructive-foreground: #fafafa;
+      --border: #27272a;
+      --input: #27272a;
+      --ring: #d4d4d8;
+      --radius: 0.5rem;
     }
     
-    /* Remove body padding */
-    body {
+    * {
+      box-sizing: border-box;
+      margin: 0;
       padding: 0;
-      box-sizing: border-box;
     }
 
-    .container {
-      background: #35363a;
-      padding: 16px;
-      margin: 0; /* Remove margin */
-    }
-
-    h3 {
-      margin: 0 0 16px 0;
-      font-size: 18px;
-      font-weight: 500;
-      color: #e8eaed;
-      text-align: center;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      margin: 8px 0;
-      border: 1px solid #5f6368;
-      border-radius: 4px;
-      box-sizing: border-box;
+    body {
+      width: 320px;
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--background);
+      color: var(--foreground);
+      overflow-x: hidden;
       font-size: 14px;
-      outline: none;
-      transition: all 0.2s;
-      background-color: #202124;
-      color: #e8eaed;
+      line-height: 1.5;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted-foreground);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: var(--radius);
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .icon-btn:hover {
+      color: var(--foreground);
+      background: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .view {
+      display: none;
+      padding: 16px;
+      animation: fadeIn 0.15s ease-in-out;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(2px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      height: 36px;
+      padding: 8px 12px;
+      background-color: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--foreground);
+      font-size: 14px;
+      transition: border-color 0.2s;
     }
 
     input:focus {
-      border-color: #8ab4f8;
+      outline: none;
+      border-color: var(--ring);
     }
 
-    button {
-      width: 100%;
-      padding: 10px 16px;
-      margin: 5px 0;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 520;
-      cursor: pointer;
-      transition: background-color 0.2s;
+    input::placeholder {
+      color: var(--muted-foreground);
     }
 
-    .primary-btn {
-      background: #8ab4f8;
-      color: #202124;
-    }
-
-    .primary-btn:hover {
-      background: #a1c2ff;
-    }
-
-    .danger-btn {
-      background: #f28b82;
-      color: #202124;
-    }
-
-    .danger-btn:hover {
-      background: #f6aea7;
-    }
-
-    .divider {
-      margin: 12px 0;
-      border-top: 3px solid #5f6368;
-    }
-
-    .interval-control {
-      margin-top: 16px;
-      text-align: center;
-    }
-
-    .interval-control h4 {
-      margin: 8px 0;
-      font-size: 14px;
-      font-weight: 500;
-      color: #e8eaed;
-    }
-
-    .interval-buttons {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 8px;
-    }
-
-    .interval-buttons button {
-      width: 30px;
-      height: 30px;
-      padding: 0;
-      margin: 0 8px;
-      border-radius: 50%;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #5f6368;
-      color: #e8eaed;
-    }
-
-    .interval-buttons button:hover {
-      background: #7d7e82;
-    }
-
-    #interval-value {
-      font-size: 16px;
-      min-width: 30px;
-      text-align: center;
-    }
-
-    /* Slider styles */
     .slider-container {
-      width: 100%;
-      margin: 15px 0;
-      padding: 0;
-      box-sizing: border-box;
+      margin-top: 8px;
+      position: relative;
     }
-
+    
     .slider {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 8px;
-      border-radius: 4px;
-      background: #5f6368;
+      height: 6px;
+      border-radius: 9999px;
+      background: var(--muted);
       outline: none;
-      margin: 15px 0;
+      margin: 10px 0;
     }
 
     .slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 0;
-      height: 0;
-      background: transparent;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
       cursor: pointer;
+      border: 1px solid var(--border);
+      transition: transform 0.1s;
+    }
+    
+    .slider::-webkit-slider-thumb:active {
+      transform: scale(0.9);
     }
 
     .slider-labels {
       display: flex;
       justify-content: space-between;
-      margin-top: 8px;
-      font-size: 12px;
-      color: #e8eaed;
+      color: var(--muted-foreground);
+      font-size: 11px;
+      margin-top: 4px;
+      font-weight: 500;
     }
-    .current-interval {
-      text-align: center;
-      margin-top: 10px;
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 36px;
+      padding: 8px 16px;
       font-size: 14px;
-      color: #e8eaed;
+      font-weight: 500;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: filter 0.2s, background 0.2s, opacity 0.2s;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: var(--primary-foreground);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      filter: brightness(0.9);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      color: var(--secondary-foreground);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--accent);
+    }
+
+    .btn-destructive {
+      background-color: transparent;
+      color: #ef4444;
+      border: 1px solid var(--border);
+    }
+
+    .btn-destructive:hover:not(:disabled) {
+      background-color: var(--destructive);
+      color: var(--destructive-foreground);
+      border-color: var(--destructive);
+    }
+
+    .status-card {
+      background-color: var(--secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .status-icon {
+      width: 32px;
+      height: 32px;
+      margin: 0 auto 12px;
+      color: var(--primary);
+    }
+
+    .status-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .status-desc {
+      font-size: 12px;
+      color: var(--muted-foreground);
+    }
+
+    .mt-4 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 16px; }
+    .flex-col { display: flex; flex-direction: column; gap: 8px; }
+
+    .dev-info {
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-top: 24px;
+      font-size: 12px;
+    }
+    
+    .dev-info h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted-foreground);
+      margin-bottom: 12px;
+    }
+    
+    .dev-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: var(--muted-foreground);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    .dev-link:last-child {
+      margin-bottom: 0;
+    }
+    
+    .dev-link:hover {
+      color: var(--foreground);
+    }
+    
+    .dev-link svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      background-color: var(--foreground);
+      color: var(--background);
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      transform: translateY(150%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    .loader {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-radius: 50%;
+      border-top-color: var(--background);
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 16px 0;
     }
   </style>
 </head>
 <body>
-  <div class="container" id="loginSection">
-    <h3>LPU WiFi Login</h3>
-    <input type="text" id="regno" placeholder="Registration Number">
-    <input type="password" id="password" placeholder="Password">
-    <button id="save" class="primary-btn">Save Credentials</button>
+  <div class="header">
+    <h1 id="header-title">LPU WiFi</h1>
+    <button class="icon-btn" id="settings-btn" style="display: none;" title="Settings">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+    <button class="icon-btn" id="back-btn" style="display: none;" title="Back">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
   </div>
 
-  <div class="container" id="reloadSection" style="display: none;">
-    <h3>WiFi Connection</h3>
-    <button id="reload" class="primary-btn">Check & Reload Connection</button>
-    <div class="divider"></div>
-    <button id="reset" class="danger-btn">Reset Credentials</button>
-    <div class="interval-control">
-      <h4>Check Interval</h4>
+  <!-- View: Login -->
+  <div class="view" id="view-login">
+    <div class="form-group">
+      <label for="regno">Registration Number</label>
+      <input type="text" id="regno" placeholder="Enter registration number" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter password" autocomplete="off">
+    </div>
+    <button id="save" class="btn btn-primary mt-4">Save Credentials</button>
+  </div>
+
+  <!-- View: Dashboard -->
+  <div class="view" id="view-dashboard">
+    <div class="status-card" id="status-card">
+      <svg id="status-icon-svg" class="status-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      <div class="status-title" id="status-title">Auto-Login Active</div>
+      <div class="status-desc" id="status-text">Monitoring connection in background.</div>
+    </div>
+    
+    <div class="flex-col">
+      <button id="reload" class="btn btn-primary">Refresh Connection</button>
+      <button id="reset" class="btn btn-destructive">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- View: Settings -->
+  <div class="view" id="view-settings">
+    <div class="form-group">
+      <label>Check Interval</label>
       <div class="slider-container">
         <input type="range" min="0" max="4" value="1" class="slider" id="interval-slider">
         <div class="slider-labels">
@@ -197,9 +390,33 @@
           <span>1h</span>
         </div>
       </div>
+      <div class="status-desc mt-4">How often the extension checks your WiFi status.</div>
+    </div>
+
+    <hr>
+    
+    <div class="dev-info">
+      <h4>Developer Information</h4>
+      <a href="https://iteshxt.me" target="_blank" class="dev-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Itesh Tomar
+      </a>
+      <a href="https://github.com/iteshxt" target="_blank" class="dev-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        github.com/iteshxt
+      </a>
+      <a href="https://iteshxt.me" target="_blank" class="dev-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        iteshxt.me
+      </a>
     </div>
   </div>
-  
+
+  <div id="toast" class="toast">
+    <span id="toast-msg">Success</span>
+    <span id="toast-loader" style="display: none;" class="loader"></span>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
