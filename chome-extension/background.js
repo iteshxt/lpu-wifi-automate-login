@@ -1,5 +1,5 @@
 const LOGIN_URL = 'https://internet.lpu.in/24online/webpages/client.jsp';
-const LOGOUT_URL = 'https://internet.lpu.in/24online/servlet/E24onlineHTTPClient';
+const LOGOUT_URL = 'https://internet.lpu.in';
 let CHECK_INTERVAL = 5; // in minutes
 
 let loginInProgress = false;
@@ -72,7 +72,7 @@ async function performLogin(isManual = false) {
             const response = await fetch('http://clients3.google.com/generate_204', { 
                 cache: "no-store", 
                 method: 'GET',
-                signal: AbortSignal.timeout(3000) 
+                signal: AbortSignal.timeout(1500) 
             });
             if (response.status === 204) {
                 console.log('Already logged in');
