@@ -1,31 +1,36 @@
+/**
+ * LPU Auto-Login Extension - Background Service Worker
+ * Orchestrates silent background auth, connectivity checks, and interval management.
+ */
+
 const LOGIN_URL = 'https://internet.lpu.in/24online/webpages/client.jsp';
-const LOGOUT_URL = 'https://internet.lpu.in';
-let CHECK_INTERVAL = 5; // in minutes
+const AUTH_URL = 'https://internet.lpu.in/24online/servlet/E24onlineHTTPClient';
+let CHECK_INTERVAL = 1; // Default fallback, overwritten by initializeInterval()
 
 let loginInProgress = false;
 
-// Obfuscator
+/**
+ * Simple utility to decode stored credentials.
+ */
 const Obfuscator = {
-  decode: (str) => {
-    try {
-      return decodeURIComponent(atob(str));
-    } catch {
-      return str; // Fallback for plain text stored previously
+    decode: (str) => {
+        try {
+            return decodeURIComponent(atob(str));
+        } catch {
+            return str; // Fallback for plain text
+        }
     }
-  }
 };
 
+/**
+ * Listen for messages from the popup UI.
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'manualLogin') {
-        performLogin(true).then(status => {
-            sendResponse({ status });
-        });
-        return true; // Keep message channel open for async response
+        performLogin(true).then(status => sendResponse({ status }));
+        return true; 
     } else if (message.action === 'checkStatus') {
         checkConnectionStatus().then(status => sendResponse({ status }));
-        return true;
-    } else if (message.action === 'logoutWifi') {
-        performLogout().then(status => sendResponse({ status }));
         return true;
     } else if (message.action === 'updateInterval') {
         const minutes = parseInt(message.minutes);
@@ -34,33 +39,38 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         chrome.storage.local.set({ checkInterval: minutes });
         chrome.alarms.create('checkConnection', { periodInMinutes: minutes });
         
-        console.log(`Check interval updated to ${minutes} minutes`);
         sendResponse({ status: 'updated' });
     }
 });
 
+/**
+ * Trigger background checks based on the configured alarm interval.
+ */
 chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === 'checkConnection') {
         performLogin();
     }
 });
 
+/**
+ * Core Authentication Routine
+ * Evaluates connectivity and forces a captive portal login sequence if required.
+ * Note: LOGIN_URL is mandatory to scrape the dynamic anti-CSRF tokens LPU generates.
+ */
 async function performLogin(isManual = false) {
-    if (loginInProgress) {
-        return 'in_progress';
-    }
-    
+    if (loginInProgress) return 'in_progress';
     loginInProgress = true;
-    
+
     if (isManual) {
         chrome.alarms.get('checkConnection', (alarm) => {
             if (!alarm) initializeInterval();
         });
     }
-    
+
     try {
+        // 1. Retrieve & Decode Credentials
         const data = await chrome.storage.local.get('credentials');
-        if (!data.credentials) {
+        if (!data.credentials || !data.credentials.regno || !data.credentials.password) {
             loginInProgress = false;
             return 'no_credentials';
         }
@@ -68,139 +78,135 @@ async function performLogin(isManual = false) {
         const regno = Obfuscator.decode(data.credentials.regno);
         const password = Obfuscator.decode(data.credentials.password);
 
+        // 2. Pre-flight Connectivity Check (bypasses portal entirely if already online)
         try {
-            const response = await fetch('http://clients3.google.com/generate_204', { 
-                cache: "no-store", 
+            const response = await fetch('http://clients3.google.com/generate_204', {
+                cache: "no-store",
                 method: 'GET',
-                signal: AbortSignal.timeout(1500) 
+                signal: AbortSignal.timeout(1000)
             });
             if (response.status === 204) {
-                console.log('Already logged in');
                 loginInProgress = false;
                 return 'already_logged_in';
             }
-        } catch(e) {
-            // Fetch failed, maybe offline or captive portal redirects
+        } catch (e) {
+             // 204 failed, we are trapped behind the captive portal
         }
 
-        return new Promise((resolve) => {
-            chrome.tabs.create({ url: LOGIN_URL, active: false }, async (tab) => {
-                try {
-                    await chrome.scripting.executeScript({
-                        target: { tabId: tab.id },
-                        function: loginToWifi,
-                        args: [regno, password]
-                    });
+        console.log("Sending Request...");
 
-                    setTimeout(() => {
-                        chrome.tabs.get(tab.id, function(tabInfo) {
-                            if (!chrome.runtime.lastError) {
-                                chrome.tabs.remove(tab.id);
-                            }
-                            loginInProgress = false;
-                            resolve('login_triggered');
-                        });
-                    }, 2500);
-                } catch (error) {
-                    console.error('Script execution error:', error);
-                    loginInProgress = false;
-                    resolve('error');
-                }
-            });
+        // 3. Fetch Portal HTML (Crucial step to extract dynamically generated variables)
+        const getRes = await fetch(LOGIN_URL, { cache: "no-store", method: 'GET' });
+        const html = await getRes.text();
+
+        // Failsafe check
+        if (html.includes('value="Logout"') || html.includes('name="logout"')) {
+            console.log("Already Connected");
+            loginInProgress = false;
+            return 'already_logged_in';
+        }
+
+        // 4. Scrape all required hidden inputs injected by the network appliance
+        const params = new URLSearchParams();
+        const inputTagRegex = /<input\s+([^>]+)>/gi;
+        let match;
+
+        while ((match = inputTagRegex.exec(html)) !== null) {
+            const attrs = match[1];
+            const nameMatch = attrs.match(/name=["']([^"']+)["']/i);
+            const valueMatch = attrs.match(/value=["']([^"']*)["']/i);
+            if (nameMatch && valueMatch) {
+                params.set(nameMatch[1], valueMatch[1]);
+            }
+        }
+
+        // 5. Append Credentials & Bypasses
+        const formattedRegno = regno.includes('@lpu.com') ? regno : `${regno}@lpu.com`;
+        
+        params.set('mode', '191');
+        params.delete('logout');
+        params.set('username', formattedRegno);
+        params.set('password', password);
+        params.set('loginotp', 'false');
+        params.set('logincaptcha', 'false');
+        params.set('registeruserotp', 'false');
+        params.set('registercaptcha', 'false');
+
+        // 6. Submit Authentication Payload
+        const postRes = await fetch(AUTH_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
         });
+
+        const postBody = await postRes.text();
+
+        // 7. Validate Response
+        let finalStatus = 'error';
+        if (postBody.includes('value="Logout"') || postBody.includes('Successfully Logged in')) {
+            console.log("Connected");
+            finalStatus = 'login_triggered';
+        } else if (postBody.includes('Invalid') || postBody.includes('Failure') || postBody.includes('Expired')) {
+            console.log("Login Failed");
+            finalStatus = 'login_failed';
+        } else {
+            console.log("Status Unknown");
+            finalStatus = 'login_unknown';
+        }
+
+        loginInProgress = false;
+        return finalStatus;
+
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('Login Error:', error);
         loginInProgress = false;
         return 'error';
     }
 }
 
+/**
+ * Quick ping to determine actual internet connectivity strictly for the UI popup.
+ */
 async function checkConnectionStatus() {
     try {
-        const response = await fetch('http://clients3.google.com/generate_204', { 
-            cache: "no-store", 
+        const response = await fetch('http://clients3.google.com/generate_204', {
+            cache: "no-store",
             method: 'GET',
-            signal: AbortSignal.timeout(3000) 
+            signal: AbortSignal.timeout(1000)
         });
-        if (response.status === 204) {
-            return 'connected';
-        }
-        return 'disconnected';
-    } catch(e) {
+        return response.status === 204 ? 'connected' : 'disconnected';
+    } catch {
         return 'disconnected';
     }
 }
 
-function loginToWifi(regno, password) {
-    document.querySelector('#agreepolicy')?.click();
-    const uname = document.querySelector('input[name="username"]');
-    const pwd = document.querySelector('input[name="password"]');
-    if (uname) uname.value = regno;
-    if (pwd) pwd.value = password;
-    document.querySelector('#loginbtn')?.click();
-}
-
-async function performLogout() {
-    chrome.alarms.clear('checkConnection');
-
-    return new Promise((resolve) => {
-        chrome.tabs.create({ url: LOGOUT_URL, active: false }, async (tab) => {
-            try {
-                await chrome.scripting.executeScript({
-                    target: { tabId: tab.id },
-                    function: logoutOfWifi
-                });
-
-                setTimeout(() => {
-                    chrome.tabs.get(tab.id, function() {
-                        if (!chrome.runtime.lastError) {
-                            chrome.tabs.remove(tab.id);
-                        }
-                        resolve('logged_out');
-                    });
-                }, 2000);
-            } catch (error) {
-                console.error('Logout script execution error:', error);
-                resolve('error');
-            }
-        });
-    });
-}
-
-function logoutOfWifi() {
-    const form = document.querySelector('form');
-    const logoutBtn = document.querySelector('input[name="logout"]');
-    
-    if (form && logoutBtn) {
-        // Many 24online captive portals have broken SSL certificates for their internal 10.10.0.1 IP
-        // Forcing HTTP avoids the 'Your connection is not private' (NET::ERR_CERT_COMMON_NAME_INVALID) error
-        if (form.action && form.action.includes('https://10.10.0.1')) {
-            form.action = form.action.replace('https://10.10.0.1', 'http://10.10.0.1');
-        }
-        
-        // The onclick attribute triggers validateLogout() which often shoots a confirm() dialog.
-        // Alert/Confirm dialogs freeze background tabs indefinitely, so we bypass it.
-        logoutBtn.removeAttribute('onclick');
-        
-        form.submit();
-    }
-}
-
+/**
+ * Retrieves the user's preferred polling interval and schedules the alarm.
+ */
 async function initializeInterval() {
     try {
         const data = await chrome.storage.local.get('checkInterval');
-        CHECK_INTERVAL = data.checkInterval ? parseInt(data.checkInterval) : 5;
-        
+        CHECK_INTERVAL = data.checkInterval ? parseInt(data.checkInterval) : 1;
+
         if (!data.checkInterval) {
             chrome.storage.local.set({ checkInterval: CHECK_INTERVAL });
         }
-        
+
         chrome.alarms.create('checkConnection', { periodInMinutes: CHECK_INTERVAL });
-    } catch (error) {
-        chrome.alarms.create('checkConnection', { periodInMinutes: 5 });
+    } catch {
+        chrome.alarms.create('checkConnection', { periodInMinutes: 1 });
     }
 }
 
-// Check when extension is first loaded
-performLogin();
-initializeInterval();
+/**
+ * Bootstrapping Listeners
+ */
+chrome.runtime.onStartup.addListener(() => {
+    performLogin();
+    initializeInterval();
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+    performLogin();
+    initializeInterval();
+});

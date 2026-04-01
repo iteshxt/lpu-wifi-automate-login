@@ -1,24 +1,25 @@
-# ⚡ LPU WiFi Auto-Login Extension
+# ⚡ LPU WiFi Auto-Login
 
-A comprehensive browser extension designed to autonomously bypass the Lovely Professional University (LPU) captive portal. Never type your registration number and password again!
+A lightweight, set-it-and-forget-it Chrome Extension that automatically logs you into the Lovely Professional University (LPU) captive portal. Never type your registration number and password again!
 
-## 🌐 Google Chrome Extension
-Our sleek, highly optimized browser extension built completely from the ground up with a premium Shadcn-inspired dark mode UI. 
+## 🌊 How It Works (The Flow)
 
-### ✨ Features
-- **True Background Polling**: Uses Chrome's native `chrome.alarms` API to seamlessly check your connection status at custom intervals (1m to 1hr). 
-- **Definitive Status Checks**: Pings `clients3.google.com/generate_204` just like Android/iOS native captive portal detectors to guarantee you are truly online without false negatives.
-- **Smart Disconnect**: Explicitly supports logging out of the network via a single click, elegantly jumping over the broken Captive Portal SSL (`10.10.0.1`) security warnings entirely behind the scenes.
-- **Dynamic Visual Badging**: The UI dynamically morphs between "Checking...", Red "Disconnected" states, and Green "Connected" states instantly, responding live to your actual network traffic.
-- **Credential Storage**: Safely obfuscates your LPU credentials in Chrome's isolated local storage.
+This extension runs completely invisibly in the background. Once you save your credentials, here is exactly what it does:
 
-### 📥 Installation Walkthrough
-1. **Download the Source:** Clone this repository or download it as a ZIP and extract it to your local drive.
-2. **Open Extensions Page:** In Google Chrome, type `chrome://extensions/` into your address bar and press Enter.
-3. **Enable Developer Mode:** In the top right corner of the extensions page, toggle the switch that says **Developer mode** to ON.
-4. **Load Unpacked:** Click the **Load unpacked** button that appears in the top left corner.
-5. **Select Folder:** Navigate to where you extracted the repository, and select the specific `chome-extension` folder.
-6. **Set up & Pin It:** The extension icon will now appear in your browser. Click the puzzle icon in the top right to pin it to your toolbar. Click the extension, enter your credentials into the Dashboard once, and enjoy endless automated connectivity!
+1. **The Quick Check:** Whenever you open your browser, it instantly tries to reach Google. If it gets a response, it knows you are already connected and goes back to sleep.
+2. **The Stealth Login:** If the internet is blocked by the LPU Portal, the extension secretly fetches the login page, extracts all the randomly generated security tokens, bypasses the CAPTCHA, and logs you in instantly behind the scenes.
+3. **The Background Guardian:** While you browse, the extension wakes up on a silent timer (default 30 minutes). It quickly verifies your connection and automatically repeats Step 2 if LPU logs you out, ensuring your internet never drops during an important task.
+
+## 📥 How to Install
+
+Since this is a custom extension, you'll need to install it in "Developer Mode" on Google Chrome. It takes less than a minute!
+
+1. **Download the Code:** Click the green **Code** button at the top of this repository and select **Download ZIP**, then extract that ZIP folder to your computer.
+2. **Open Extensions:** In Google Chrome, type `chrome://extensions/` into your URL address bar and press **Enter**.
+3. **Turn on Developer Mode:** In the top right corner of the screen, toggle the **Developer mode** switch so it turns blue.
+4. **Load the Extension:** Click the new **Load unpacked** button that appears in the top left corner.
+5. **Select the Folder:** Browse to where you extracted the ZIP, select the folder named `chome-extension`, and click Open.
+6. **Set up & Pin:** Click the puzzle piece icon 🧩 in the top right of your browser and pin the **LPU WiFi** extension. Click it, type in your LPU credentials, and enjoy endless automated connectivity!
 
 ---
 *Built by [Itesh Tomar](https://iteshxt.me) | [GitHub](https://github.com/iteshxt) - Contributions are always welcome!*

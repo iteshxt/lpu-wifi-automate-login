@@ -1,18 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
-  <title>LPU WiFi</title>
+  <title>LPU WiFi Connect</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --background: #09090b;
       --foreground: #fafafa;
       --card: #09090b;
-      --card-foreground: #fafafa;
-      --popover: #09090b;
-      --popover-foreground: #fafafa;
       --primary: #fafafa;
       --primary-foreground: #18181b;
       --secondary: #27272a;
@@ -20,11 +17,9 @@
       --muted: #27272a;
       --muted-foreground: #a1a1aa;
       --accent: #27272a;
-      --accent-foreground: #fafafa;
       --destructive: #7f1d1d;
       --destructive-foreground: #fafafa;
       --border: #27272a;
-      --input: #27272a;
       --ring: #d4d4d8;
       --radius: 0.5rem;
     }
@@ -93,15 +88,8 @@
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(2px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(2px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .form-group {
@@ -201,20 +189,11 @@
     .btn-primary {
       background-color: var(--primary);
       color: var(--primary-foreground);
+      margin-top: 8px;
     }
 
     .btn-primary:hover:not(:disabled) {
       filter: brightness(0.9);
-    }
-
-    .btn-secondary {
-      background-color: var(--secondary);
-      color: var(--secondary-foreground);
-      border: 1px solid var(--border);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background-color: var(--accent);
     }
 
     .btn-destructive {
@@ -235,7 +214,7 @@
       border-radius: var(--radius);
       padding: 16px;
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
     }
 
     .status-icon {
@@ -243,6 +222,7 @@
       height: 32px;
       margin: 0 auto 12px;
       color: var(--primary);
+      transition: color 0.3s;
     }
 
     .status-title {
@@ -256,18 +236,16 @@
       color: var(--muted-foreground);
     }
 
-    .mt-4 {
-      margin-top: 16px;
-    }
-
-    .mb-4 {
-      margin-bottom: 16px;
-    }
-
-    .flex-col {
+    .footer-brand {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted-foreground);
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
     .dev-info {
@@ -297,11 +275,16 @@
       transition: color 0.2s;
     }
 
+    .dev-name {
+      cursor: default;
+      color: var(--foreground);
+    }
+
     .dev-link:last-child {
       margin-bottom: 0;
     }
 
-    .dev-link:hover {
+    .dev-link:hover:not(.dev-name) {
       color: var(--foreground);
     }
 
@@ -310,6 +293,13 @@
       height: 14px;
     }
 
+    hr {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    /* Toast Notifications */
     .toast {
       position: fixed;
       bottom: 16px;
@@ -346,27 +336,19 @@
     }
 
     @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    hr {
-      border: 0;
-      border-top: 1px solid var(--border);
-      margin: 16px 0;
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 
 <body>
-  <div class="header">
+  <!-- Header Navigation -->
+  <header class="header">
     <h1 id="header-title">LPU WiFi</h1>
     <button class="icon-btn" id="settings-btn" style="display: none;" title="Settings">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path
-          d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
         <circle cx="12" cy="12" r="3" />
       </svg>
     </button>
@@ -377,10 +359,10 @@
         <polyline points="12 19 5 12 12 5" />
       </svg>
     </button>
-  </div>
+  </header>
 
-  <!-- View: Login -->
-  <div class="view" id="view-login">
+  <!-- View: Login Credentials -->
+  <main class="view" id="view-login">
     <div class="form-group">
       <label for="regno">Registration Number</label>
       <input type="text" id="regno" placeholder="Enter registration number" autocomplete="off">
@@ -389,11 +371,11 @@
       <label for="password">Password</label>
       <input type="password" id="password" placeholder="Enter password" autocomplete="off">
     </div>
-    <button id="save" class="btn btn-primary mt-4">Save Credentials</button>
-  </div>
+    <button id="save" class="btn btn-primary">Save Credentials</button>
+  </main>
 
-  <!-- View: Dashboard -->
-  <div class="view" id="view-dashboard">
+  <!-- View: Active Dashboard -->
+  <main class="view" id="view-dashboard">
     <div class="status-card" id="status-card">
       <svg id="status-icon-svg" class="status-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -407,29 +389,26 @@
       <div class="status-desc" id="status-text">Monitoring connection in background.</div>
     </div>
 
-    <div class="flex-col">
-      <button id="reload" class="btn btn-primary">Refresh Connection</button>
-      <button id="logout-wifi" class="btn btn-destructive">Disconnect WiFi</button>
-    </div>
+    <button id="reload" class="btn btn-primary">Connect / Check Status</button>
 
-    <div
-      style="text-align: center; margin-top: 24px; font-size: 11px; font-weight: 500; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center; gap: 6px;">
+    <div class="footer-brand">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 2L2 7l10 5 10-5-10-5z" />
         <path d="M2 17l10 5 10-5" />
         <path d="M2 12l10 5 10-5" />
       </svg>
-      LPU WIFI Auto-Login by iteshxt
+      LPU WIFI Auto-Login by <a href="https://github.com/iteshxt" target="_blank" style="color: inherit; text-decoration: none; border-bottom: 1px dotted var(--muted-foreground); transition: color 0.2s;">iteshxt</a>
     </div>
-  </div>
+  </main>
 
-  <!-- View: Settings -->
-  <div class="view" id="view-settings">
+  <!-- View: Configuration Settings -->
+  <main class="view" id="view-settings">
     <div class="form-group">
-      <label>Check Interval</label>
+      <label>Background Check Interval</label>
       <div class="slider-container">
-        <input type="range" min="0" max="4" value="1" class="slider" id="interval-slider">
+        <!-- Default explicitly set to index 3 (30 minutes) -->
+        <input type="range" min="0" max="4" value="3" class="slider" id="interval-slider">
         <div class="slider-labels">
           <span>1m</span>
           <span>5m</span>
@@ -438,19 +417,19 @@
           <span>1h</span>
         </div>
       </div>
-      <div class="status-desc mt-4">How often the extension checks your WiFi status.</div>
+      <div class="status-desc mt-4" style="margin-top: 16px;">How frequently the extension ensures you are connected.</div>
     </div>
 
     <hr>
 
-    <div class="form-group mb-4">
+    <div class="form-group">
       <label>Danger Zone</label>
       <button id="reset" class="btn btn-destructive">Remove Saved Credentials</button>
     </div>
 
     <div class="dev-info">
       <h4>Developer Information</h4>
-      <div class="dev-link" style="cursor: default; color: var(--foreground);">
+      <div class="dev-link dev-name">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
@@ -476,8 +455,9 @@
         iteshxt.me
       </a>
     </div>
-  </div>
+  </main>
 
+  <!-- Global Toast Component -->
   <div id="toast" class="toast">
     <span id="toast-msg">Success</span>
     <span id="toast-loader" style="display: none;" class="loader"></span>
